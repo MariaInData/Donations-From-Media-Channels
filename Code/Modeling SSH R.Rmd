@@ -1,0 +1,64 @@
+---
+title: "Team Yellow technical document R"
+output: pdf_document
+date: "2022-08-25"
+---
+
+This document shows how to explain the relationship between influencing factors and attributed donation amount. The granularity of the donation amount is media mention level, which means for each media mention, how much donation amount will be brought.
+
+# Data Preparation
+```{r}
+library(readxl)
+library(dplyr)
+```
+load the library we need for the model building.
+
+```{r}
+live_case_ninth_cut <- read_excel("live_case_ninth_cut.xlsx")
+```
+Read the data(already merged) into R.
+
+```{r}
+live_case_ninth_cut$`SentimentF`<-factor(live_case_ninth_cut$`Sentiment`)
+live_case_ninth_cut$`influencer_flagF`<-factor(live_case_ninth_cut$`influencer_flag`)
+live_case_ninth_cut$`wkday_F`<-factor(live_case_ninth_cut$`wkday`)
+live_case_ninth_cut$`media_typeF`<-factor(live_case_ninth_cut$`media_type`)
+live_case_ninth_cut$`holiday_flagF`<-factor(live_case_ninth_cut$`holiday_flag`)
+live_case_ninth_cut$`pc_flagF`<-factor(live_case_ninth_cut$`pc_flag`)
+live_case_ninth_cut$`stateF`<-factor(live_case_ninth_cut$`state`)
+live_case_ninth_cut$`cityF`<-factor(live_case_ninth_cut$`city`)
+live_case_ninth_cut$`time_3F`<-factor(live_case_ninth_cut$`time_3`)
+live_case_ninth_cut$`minnesota_flagF`<-factor(live_case_ninth_cut$`minnesota_flag`)
+live_case_ninth_cut$`month_yearF`<-factor(live_case_ninth_cut$`month_year`)
+```
+Select influencing factors in the dataset and change the data type of some of the data points into dummy variables.
+
+```{r}
+attach(live_case_ninth_cut)
+levels(live_case_ninth_cut$media_typeF)
+```
+Our analysis bases on the different type of media so that we divide media mentions into 4 different channels.
+
+```{r}
+live_case_ninth_cut <- within(live_case_ninth_cut, `wkday_F` <- relevel(`wkday_F`, ref = 6))
+live_case_ninth_cut <- within(live_case_ninth_cut, month_yearF <- relevel(month_yearF, ref = 4))
+live_case_ninth_cut <- within(live_case_ninth_cut, `SentimentF` <- relevel(`SentimentF`, ref = 3))
+live_case_ninth_cut <- within(live_case_ninth_cut, `media_typeF` <- relevel(`media_typeF`, ref = 3))
+```
+As for the 4 factors(weekdays, month of year, sentiment and media type), transfer their data type into factors(one basic level and how several other levels effect the donation amount compared with the basic level).
+
+# Model Building
+```{r}
+attach(live_case_ninth_cut)
+detach(live_case_ninth_cut)
+```
+
+```{r}
+linefit <-lm(`sum_amount_attribution` ~ `Reach` + `wkday_F` + `SentimentF` + `media_typeF` +  `time_3` + `pc_flagF` + `minnesota_flagF` + Facebook_Social_Echo + month_yearF)
+```
+Build the linear regression model to explain the relationship between the donation amount and the influencing factors.
+
+```{r}
+summary(linefit)
+```
+The result and performance of the linear regression is shown.
